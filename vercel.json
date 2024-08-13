@@ -15,7 +15,6 @@
   "build": {
     "env": {
       "DATABASE_URL": "mongodb+srv://planner:@impassword@cluster0.lxevxjf.mongodb.net/jadoreivc?retryWrites=true&w=majority&appName=Cluster0"
-    },
-    "command": "prisma generate && run build"
+    }
   }
 }
