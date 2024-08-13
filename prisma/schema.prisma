@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(uuid()) @map("_id")
+  fullName  String
+  address   String?
+  email     String     @unique
+  password  String
+  userType  UserType
+  languages String[]
+  image     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  tourGuide TourGuide?
+  reviews   Review[]   @relation("touristReviews")
+  tourPlans TourPlan[]
+  PlanTour  PlanTour[]
+}
+
+model TourGuide {
+  id             String   @id @default(uuid()) @map("_id")
+  userId         String   @unique
+  location       String?
+  offerRange     Int?
+  aboutMe        String?
+  motto          String?
+  thingsToDo     String[]
+  summary        String?
+  tourHighlights String[]
+  user           User     @relation(fields: [userId], references: [id])
+  reviews        Review[] @relation("guideReviews")
+  rating         String?
+  // PlanTour       PlanTour[]
+}
+
+model Review {
+  id          String    @id @default(uuid()) @map("_id")
+  touristId   String
+  tourGuideId String
+  tourist     User      @relation(fields: [touristId], references: [id], name: "touristReviews")
+  tourGuide   TourGuide @relation(fields: [tourGuideId], references: [id], name: "guideReviews")
+  rating      Int
+  remark      String
+  createdAt   DateTime  @default(now())
+}
+
+model TourPlan {
+  id              String            @id @default(uuid()) @map("_id")
+  touristId       String
+  location        String
+  startDate       DateTime
+  endDate         DateTime
+  time            String
+  numberOfPeople  Int
+  guidePreference GuidePreference[]
+  tourist         User              @relation(fields: [touristId], references: [id])
+  createdAt       DateTime          @default(now())
+}
+
+model PlanTour {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String
+  // tourGuideId    String
+  location       String
+  startDate      DateTime
+  endDate        DateTime
+  time           String
+  numberOfPeople Int
+  localGuide     String[]
+  noOfDays       String
+  user           User?    @relation(fields: [userId], references: [id])
+  // tourGuide      TourGuide @relation(fields: [tourGuideId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserType {
+  TOURIST
+  TOUR_GUIDE
+}
+
+enum GuidePreference {
+  MAN
+  WOMAN
+  COUPLE
+  FAMILY
+  FRIENDS
+}
