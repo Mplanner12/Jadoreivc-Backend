@@ -66,7 +66,7 @@ model TourPlan {
   time            String
   numberOfPeople  Int
   guidePreference GuidePreference[]
-  tourist         User              @relation(fields: [touristId], references: [id])
+  tourist         User?             @relation(fields: [touristId], references: [id])
   createdAt       DateTime          @default(now())
 }
 
