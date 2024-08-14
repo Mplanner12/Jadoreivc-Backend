@@ -117,6 +117,13 @@ exports.updateProfile = async (req, res) => {
     const { fullName, address, languages, image, userType, tourGuideData } =
       req.body;
 
+    const updateData = {};
+
+    if (fullName) updateData.fullName = fullName;
+    if (address) updateData.address = address;
+    if (languages) updateData.languages = languages;
+    if (image) updateData.image = image;
+
     // Update user profile
     const user = await prisma.user.update({
       where: { id: req.user.id },
@@ -132,22 +139,35 @@ exports.updateProfile = async (req, res) => {
       // Use upsert to ensure a single instance of TourGuide
       tourGuideData.offerRange = parseInt(tourGuideData.offerRange);
 
+      const tourGuideUpdateData = {};
+
+      // Add fields to tourGuideUpdateData only if they are provided
+      if (tourGuideData.location)
+        tourGuideUpdateData.location = tourGuideData.location;
+      if (tourGuideData.offerRange)
+        tourGuideUpdateData.offerRange = parseInt(tourGuideData.offerRange);
+      if (tourGuideData.aboutMe)
+        tourGuideUpdateData.aboutMe = tourGuideData.aboutMe;
+      if (tourGuideData.motto) tourGuideUpdateData.motto = tourGuideData.motto;
+      if (tourGuideData.thingsToDo)
+        tourGuideUpdateData.thingsToDo = tourGuideData.thingsToDo;
+
+      // Use upsert to ensure a single instance of TourGuide
       await prisma.tourGuide.upsert({
         where: { userId: user.id },
-        update: {
-          location: tourGuideData.location,
-          offerRange: tourGuideData.offerRange,
-          aboutMe: tourGuideData.aboutMe,
-          motto: tourGuideData.motto,
-          thingsToDo: tourGuideData.thingsToDo,
-        },
+        update: tourGuideUpdateData, // Use the tourGuideUpdateData object
         create: {
           userId: user.id,
-          location: tourGuideData.location,
-          offerRange: tourGuideData.offerRange,
-          aboutMe: tourGuideData.aboutMe,
-          motto: tourGuideData.motto,
-          thingsToDo: tourGuideData.thingsToDo,
+          // Only include fields if they are provided in tourGuideData
+          ...(tourGuideData.location && { location: tourGuideData.location }),
+          ...(tourGuideData.offerRange && {
+            offerRange: parseInt(tourGuideData.offerRange),
+          }),
+          ...(tourGuideData.aboutMe && { aboutMe: tourGuideData.aboutMe }),
+          ...(tourGuideData.motto && { motto: tourGuideData.motto }),
+          ...(tourGuideData.thingsToDo && {
+            thingsToDo: tourGuideData.thingsToDo,
+          }),
         },
       });
     }
