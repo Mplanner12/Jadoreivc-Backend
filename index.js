@@ -5,7 +5,7 @@ const userRoutes = require("./routes/userRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const tourPlan = require("./routes/tourPlanRoutes");
 const tourGuideRoutes = require("./routes/tourGuideRoutes");
-const planTourRoutes = require("./routes/planTourRoutes");
+// const planTourRoutes = require("./routes/planTourRoutes");
 
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const cors = require("cors");
@@ -35,7 +35,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/plans", tourPlan);
 app.use("/api/tourGuides", tourGuideRoutes);
-app.use("/api/planTours", planTourRoutes);
+// app.use("/api/planTours", planTourRoutes);
 
 app.use(errorHandler); // Use the error handling middleware
 
