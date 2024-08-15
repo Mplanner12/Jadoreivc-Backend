@@ -101,9 +101,13 @@ exports.getCurrentUser = async (req, res) => {
 
 exports.logoutUser = async (req, res) => {
   try {
+    // Clear the cookie by setting it with an expired date
     res.cookie("token", "", {
       expires: new Date(0),
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: "/",
     });
 
     res.status(200).json({ message: "Successfully logged out" });
