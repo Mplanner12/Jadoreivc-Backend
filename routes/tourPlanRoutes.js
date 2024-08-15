@@ -10,7 +10,7 @@ const protect = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 router.post("/tourPlans", protect, createTourPlan);
-router.get("/tourPlans", protect, getTourPlans);
+router.get("/tourPlans", getTourPlans);
 router.get("/tourPlanById/:id", protect, getTourPlanById);
 
 module.exports = router;

@@ -36,7 +36,15 @@ exports.getTourPlans = async (req, res) => {
   try {
     const tourPlans = await prisma.tourPlan.findMany({
       include: {
-        tourist: true,
+        tourist: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            image: true,
+            userType: true,
+          },
+        },
       },
     });
     res.json({ success: true, tourPlans });
