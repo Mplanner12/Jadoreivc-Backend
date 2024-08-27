@@ -40,11 +40,47 @@ exports.registerUser = async (req, res) => {
       });
     }
 
-    cookieToken(user, res);
+    cookieToken(user, res, userType);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// exports.loginUser = async (req, res) => {
+//   try {
+//     const { email, password, userType } = req.body;
+
+//     // Check if the user exists
+//     const user = await prisma.user.findUnique({
+//       where: { email },
+//     });
+
+//     if (!user) {
+//       return res.status(401).json({ message: "Invalid email or password" });
+//     }
+
+//     // Check if the password is correct
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) {
+//       return res.status(401).json({ message: "Invalid email or password" });
+//     }
+
+//     // Check if the userType matches and if the user has updated their profile to be a tour guide
+//     if (
+//       userType === "TOUR_GUIDE" &&
+//       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
+//     ) {
+//       return res.status(401).json({
+//         message:
+//           "You haven't updated your profile to login as a tour guide. Note that every user is a Tourist, but not all tourists are tour Guides.",
+//       });
+//     }
+
+//     cookieToken(user, res, userType);
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 
 exports.loginUser = async (req, res) => {
   try {
@@ -72,7 +108,7 @@ exports.loginUser = async (req, res) => {
     ) {
       return res.status(401).json({
         message:
-          "You haven't updated your profile to login as a tour guide. Note that every user is a Tourist, but not all tourists are tour Guides.",
+          "You haven't yet updated your profile to login as a tour guide",
       });
     }
 
@@ -109,6 +145,8 @@ exports.logoutUser = async (req, res) => {
       sameSite: "None",
       path: "/",
     });
+
+    res.clearCookie("token");
 
     res.status(200).json({ message: "Successfully logged out" });
   } catch (error) {

@@ -1,6 +1,6 @@
 const getJwtToken = require("../helpers/getJwtToken");
 
-const cookieToken = (user, res) => {
+const cookieToken = (user, res, userType) => {
   const token = getJwtToken(user.id); // Using 'id' for JWT
   const options = {
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
@@ -16,6 +16,7 @@ const cookieToken = (user, res) => {
     success: true,
     token,
     user,
+    userType,
   });
 };
 
