@@ -27,7 +27,7 @@ model User {
   tourGuide TourGuide?
   reviews   Review[]   @relation("touristReviews")
   tourPlans TourPlan[]
-  PlanTour  PlanTour[]
+  // PlanTour  PlanTour[]
 }
 
 model TourGuide {
@@ -63,30 +63,46 @@ model TourPlan {
   location        String
   startDate       DateTime
   endDate         DateTime
-  time            String
-  numberOfPeople  Int
+  // time            String
+  adults          Int      @default(0)
+  children        Int      @default(0)
+  infants         Int      @default(0)
+  pets            Int      @default(0)
   guidePreference String[]
   tourist         User?    @relation(fields: [touristId], references: [id])
   createdAt       DateTime @default(now())
 }
 
-model PlanTour {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId         String
-  // tourGuideId    String
-  location       String
-  startDate      DateTime
-  endDate        DateTime
-  time           String
-  numberOfPeople Int
-  localGuide     String[]
-  noOfDays       String
-  user           User?    @relation(fields: [userId], references: [id])
-  // tourGuide      TourGuide @relation(fields: [tourGuideId], references: [id])
+// model TourPlan {
+//   id              String   @id @default(uuid()) @map("_id")
+//   touristId       String
+//   location        String
+//   startDate       DateTime
+//   endDate         DateTime
+//   time            String
+//   numberOfPeople  Int
+//   guidePreference String[]
+//   tourist         User?    @relation(fields: [touristId], references: [id])
+//   createdAt       DateTime @default(now())
+// }
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// model PlanTour {
+//   id             String   @id @default(auto()) @map("_id") @db.ObjectId
+//   userId         String
+//   // tourGuideId    String
+//   location       String
+//   startDate      DateTime
+//   endDate        DateTime
+//   time           String
+//   numberOfPeople Int
+//   localGuide     String[]
+//   noOfDays       String
+//   user           User?    @relation(fields: [userId], references: [id])
+//   // tourGuide      TourGuide @relation(fields: [tourGuideId], references: [id])
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
 
 enum UserType {
   TOURIST
