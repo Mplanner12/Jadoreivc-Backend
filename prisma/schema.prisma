@@ -14,25 +14,26 @@ generator client {
 }
 
 model User {
-  id        String     @id @default(uuid()) @map("_id")
-  fullName  String
-  address   String?
-  email     String     @unique
-  password  String
-  userType  UserType
-  languages String[]
-  image     String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  tourGuide TourGuide?
-  reviews   Review[]   @relation("touristReviews")
-  tourPlans TourPlan[]
+  id           String        @id @default(uuid()) @map("_id")
+  fullName     String
+  address      String?
+  email        String        @unique
+  password     String
+  userType     UserType
+  languages    String[]
+  image        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  tourGuide    TourGuide?
+  reviews      Review[]      @relation("touristReviews")
+  tourPlans    TourPlan[]
   // PlanTour  PlanTour[]
+  Notification Notification?
 }
 
 model TourGuide {
-  id             String   @id @default(uuid()) @map("_id")
-  userId         String   @unique
+  id             String    @id @default(uuid()) @map("_id")
+  userId         String    @unique
   location       String?
   offerRange     Int?
   aboutMe        String?
@@ -40,10 +41,11 @@ model TourGuide {
   thingsToDo     String[]
   summary        String?
   tourHighlights String[]
-  user           User     @relation(fields: [userId], references: [id])
-  reviews        Review[] @relation("guideReviews")
+  user           User      @relation(fields: [userId], references: [id])
+  reviews        Review[]  @relation("guideReviews")
   rating         String?
-  // PlanTour       PlanTour[]
+  TourPlan       TourPlan? @relation(fields: [tourPlanId], references: [id])
+  tourPlanId     String?
 }
 
 model Review {
@@ -58,61 +60,45 @@ model Review {
 }
 
 model TourPlan {
-  id              String   @id @default(uuid()) @map("_id")
+  id              String         @id @default(uuid()) @map("_id")
   touristId       String
   location        String
   startDate       DateTime
   endDate         DateTime
-  // time            String
-  adults          Int      @default(0)
-  children        Int      @default(0)
-  infants         Int      @default(0)
-  pets            Int      @default(0)
-  guidePreference String[]
-  tourist         User?    @relation(fields: [touristId], references: [id])
-  createdAt       DateTime @default(now())
+  adults          Int            @default(0)
+  children        Int            @default(0)
+  infants         Int            @default(0)
+  pets            Int            @default(0)
+  guidePreference String
+  // tourGuide       TourGuide?  @relation(fields: [guidePreference], references: [id])
+  tourist         User?          @relation(fields: [touristId], references: [id])
+  createdAt       DateTime       @default(now())
+  TourGuide       TourGuide[]
+  paymentStatus   PaymentStatus  @default(PENDING)
+  notifications   Notification[]
 }
 
-// model TourPlan {
-//   id              String   @id @default(uuid()) @map("_id")
-//   touristId       String
-//   location        String
-//   startDate       DateTime
-//   endDate         DateTime
-//   time            String
-//   numberOfPeople  Int
-//   guidePreference String[]
-//   tourist         User?    @relation(fields: [touristId], references: [id])
-//   createdAt       DateTime @default(now())
-// }
+model Notification {
+  id         String   @id @default(uuid()) @map("_id")
+  userId     String   @unique
+  tourPlanId String   @unique
+  type       String
+  message    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-// model PlanTour {
-//   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-//   userId         String
-//   // tourGuideId    String
-//   location       String
-//   startDate      DateTime
-//   endDate        DateTime
-//   time           String
-//   numberOfPeople Int
-//   localGuide     String[]
-//   noOfDays       String
-//   user           User?    @relation(fields: [userId], references: [id])
-//   // tourGuide      TourGuide @relation(fields: [tourGuideId], references: [id])
+  // Relations
+  user     User     @relation(fields: [userId], references: [id])
+  tourPlan TourPlan @relation(fields: [tourPlanId], references: [id])
+}
 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
 
 enum UserType {
   TOURIST
   TOUR_GUIDE
 }
-
-// enum GuidePreference {
-//   MAN
-//   WOMAN
-//   COUPLE
-//   FAMILY
-//   FRIENDS
-// }
