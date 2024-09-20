@@ -18,6 +18,6 @@ router.put("/auth/profile", protect, updateProfile);
 router.delete("/delete", protect, (req, res) => {
   deleteUser(req, res); // Call the deleteUser function
 });
-router.get("/auth/currentUser", getCurrentUser);
+router.get("/auth/currentUser", protect, getCurrentUser);
 
 module.exports = router;
