@@ -59,7 +59,7 @@ const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 const base = "https://api-m.sandbox.paypal.com";
 
 // parse post params sent in body in json format
-app.use(express.json());
+// app.use(express.json());
 
 /**
  * Generate an OAuth 2.0 access token for authenticating with PayPal REST APIs.
