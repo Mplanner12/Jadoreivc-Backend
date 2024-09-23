@@ -4,47 +4,47 @@ const cookieToken = require("../utils/cookieToken");
 
 const prisma = new PrismaClient();
 
-exports.registerUser = async (req, res) => {
-  try {
-    const { fullName, email, password, userType } = req.body;
+// exports.registerUser = async (req, res) => {
+//   try {
+//     const { fullName, email, password, userType } = req.body;
 
-    // Check if the user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+//     // Check if the user already exists
+//     const existingUser = await prisma.user.findUnique({
+//       where: { email },
+//     });
 
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+//     if (existingUser) {
+//       return res.status(400).json({ message: "User already exists" });
+//     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+//     // Hash the password
+//     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const user = await prisma.user.create({
-      data: {
-        fullName,
-        // address,
-        email,
-        password: hashedPassword,
-        userType,
-      },
-    });
+//     // Create new user
+//     const user = await prisma.user.create({
+//       data: {
+//         fullName,
+//         // address,
+//         email,
+//         password: hashedPassword,
+//         userType,
+//       },
+//     });
 
-    // If userType is TOUR_GUIDE, create an empty TourGuide record
-    if (userType === "TOUR_GUIDE") {
-      await prisma.tourGuide.create({
-        data: {
-          userId: user.id,
-        },
-      });
-    }
+//     // If userType is TOUR_GUIDE, create an empty TourGuide record
+//     if (userType === "TOUR_GUIDE") {
+//       await prisma.tourGuide.create({
+//         data: {
+//           userId: user.id,
+//         },
+//       });
+//     }
 
-    cookieToken(user, res, userType);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+//     cookieToken(user, res, userType);
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 
 // exports.loginUser = async (req, res) => {
 //   try {
@@ -72,47 +72,58 @@ exports.registerUser = async (req, res) => {
 //     ) {
 //       return res.status(401).json({
 //         message:
-//           "You haven't updated your profile to login as a tour guide. Note that every user is a Tourist, but not all tourists are tour Guides.",
+//           "You haven't yet updated your profile to login as a tour guide",
 //       });
 //     }
 
-//     cookieToken(user, res, userType);
+//     cookieToken(user, res);
 //   } catch (error) {
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
 // };
 
+exports.registerUser = async (req, res) => {
+  try {
+    const { fullName, email, password, userType } = req.body;
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { fullName, email, password: hashedPassword, userType },
+    });
+
+    // Store user details in session
+    cookieToken(user, req, res, userType);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.loginUser = async (req, res) => {
   try {
     const { email, password, userType } = req.body;
 
-    // Check if the user exists
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Check if the password is correct
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    // Check if the userType matches and if the user has updated their profile to be a tour guide
     if (
       userType === "TOUR_GUIDE" &&
       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
     ) {
-      return res.status(401).json({
-        message:
-          "You haven't yet updated your profile to login as a tour guide",
-      });
+      return res.status(401).json({ message: "Not a tour guide" });
     }
 
-    cookieToken(user, res);
+    // Store user details in session
+    cookieToken(user, req, res, userType);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -135,20 +146,35 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
+// exports.logoutUser = async (req, res) => {
+//   try {
+//     // Clear the cookie by setting it with an expired date
+//     res.cookie("token", "", {
+//       expires: new Date(0),
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "None",
+//       path: "/",
+//     });
+
+//     res.clearCookie("token");
+
+//     res.status(200).json({ message: "Successfully logged out" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
 exports.logoutUser = async (req, res) => {
   try {
-    // Clear the cookie by setting it with an expired date
-    res.cookie("token", "", {
-      expires: new Date(0),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
-      path: "/",
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to log out" });
+      }
+
+      res.clearCookie("connect.sid"); // clear the session cookie
+      res.status(200).json({ message: "Successfully logged out" });
     });
-
-    res.clearCookie("token");
-
-    res.status(200).json({ message: "Successfully logged out" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

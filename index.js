@@ -7,14 +7,19 @@ const tourPlan = require("./routes/tourPlanRoutes");
 const tourGuideRoutes = require("./routes/tourGuideRoutes");
 const { PrismaClient } = require("@prisma/client");
 const notificationRoutes = require("./routes/notificationRoutes");
+const Redis = require("ioredis");
+const RedisStore = require("connect-redis").default;
+const session = require("express-session");
 
 const prisma = new PrismaClient();
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const cors = require("cors");
+const cookieToken = require("./utils/cookieToken");
 
 dotenv.config();
 
 const app = express();
+const redisClient = new Redis();
 
 app.use(
   cors({
@@ -32,6 +37,19 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  session({
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET || "your-session-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // Set to true in production
+      httpOnly: true,
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    },
+  })
+);
 
 app.use("/api/users", userRoutes);
 app.use("/api/reviews", reviewRoutes);

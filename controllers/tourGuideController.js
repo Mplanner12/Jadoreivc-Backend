@@ -31,3 +31,21 @@ exports.getTourGuideById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getTourGuideByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+    const tourGuide = await prisma.tourGuide.findFirst({
+      where: { name },
+      include: { user: true, reviews: true },
+    });
+
+    if (!tourGuide) {
+      return res.status(404).json({ message: "Tour guide not found" });
+    }
+
+    res.json({ success: true, tourGuide });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
