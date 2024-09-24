@@ -142,6 +142,9 @@ exports.getCurrentUser = async (req, res) => {
 
     res.json({ success: true, user });
   } catch (error) {
+    if (!res.headersSent) {
+    res.status(statusCode).json({ message: errorMessage });
+  } else {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
