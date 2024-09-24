@@ -62,11 +62,16 @@ const cookieToken = async (user, req, res, userType) => {
       refreshToken, // You can include refresh token here if needed
     };
 
-    res.status(200).session.json({
-      success: true,
-      user: req.session.user, // Return the session data
-      message: "User logged in and session started",
-    });
+    if (req.session) {
+      res.status(200).json({
+        success: true,
+        user: req.session.user,
+        message: "User logged in and session started",
+      });
+    } else {
+      console.error("Session is not available");
+      res.status(500).json({ message: "Session initialization error" });
+    }
   } catch (error) {
     console.error("Error storing session or refresh token:", error);
     res.status(500).json({ message: "Server error", error });
