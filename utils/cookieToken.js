@@ -62,7 +62,7 @@ const cookieToken = async (user, req, res, userType) => {
       refreshToken, // You can include refresh token here if needed
     };
 
-    res.status(200).session.cookie(options).json({
+    res.status(200).session.json({
       success: true,
       user: req.session.user, // Return the session data
       message: "User logged in and session started",
