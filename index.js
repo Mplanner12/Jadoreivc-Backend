@@ -10,6 +10,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const redis = require("ioredis");
 const RedisStore = require("connect-redis").default;
 const session = require("express-session");
+const { createClient } = require("redis");
 
 const prisma = new PrismaClient();
 const { errorHandler } = require("./middlewares/errorMiddleware");
@@ -19,22 +20,30 @@ const cookieToken = require("./utils/cookieToken");
 dotenv.config();
 
 const app = express();
-const redisClient = new redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD,
-  maxRetriesPerRequest: 2, // Limit retries
-  reconnectOnError: (err) => true, // Auto reconnect
-  // tls: {
-  //   // Try explicitly setting the minimum TLS version
-  //   minVersion: "TLSv1.2",
-  // }, // Secure connection if needed
-});
+// const redisClient = new redis({
+//   host: process.env.REDIS_HOST,
+//   port: process.env.REDIS_PORT,
+//   password: process.env.REDIS_PASSWORD,
+//   maxRetriesPerRequest: 2, // Limit retries
+//   reconnectOnError: (err) => true, // Auto reconnect
+//   // tls: {
+//   //   // Try explicitly setting the minimum TLS version
+//   //   minVersion: "TLSv1.2",
+//   // }, // Secure connection if needed
+// });
 
 // const redisClient = redis.createClient({
 //   url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
 //   legacyMode: true, // Enable this for compatibility with connect-redis
 // });
+
+const client = createClient({
+  password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
+  socket: {
+    host: "redis-18121.c270.us-east-1-3.ec2.redns.redis-cloud.com",
+    port: 18121,
+  },
+});
 
 app.use(
   cors({
@@ -54,7 +63,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
