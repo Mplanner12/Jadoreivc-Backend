@@ -8,6 +8,7 @@ const tourGuideRoutes = require("./routes/tourGuideRoutes");
 const { PrismaClient } = require("@prisma/client");
 const notificationRoutes = require("./routes/notificationRoutes");
 const Redis = require("ioredis");
+const redis = require("redis");
 const RedisStore = require("connect-redis").default;
 const session = require("express-session");
 
@@ -19,7 +20,13 @@ const cookieToken = require("./utils/cookieToken");
 dotenv.config();
 
 const app = express();
-const redisClient = new Redis();
+
+const redisClient = Redis.createClient({
+  url: process.env.REDIS_URL,
+  legacyMode: true,
+});
+
+redisClient.on("error", (err) => console.log("Redis Client Error", err));
 
 app.use(
   cors({

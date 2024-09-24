@@ -8,13 +8,6 @@ const prisma = new PrismaClient();
 
 // const cookieToken = async (user, res, userType) => {
 //   const token = getJwtToken(user.id); // Using 'id' for JWT
-const options = {
-  expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  // sameSite: "None",
-  maxAge: 3 * 24 * 60 * 60 * 1000,
-};
 
 //   user.password = undefined;
 
@@ -43,6 +36,13 @@ const options = {
 //   });
 // };
 const cookieToken = async (user, req, res, userType) => {
+  const options = {
+    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    // sameSite: "None",
+    maxAge: 3 * 24 * 60 * 60 * 1000,
+  };
   const refreshToken = randomBytes(64).toString("hex");
 
   try {
