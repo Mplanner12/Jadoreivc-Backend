@@ -43,7 +43,8 @@ const cookieToken = async (user, req, res, userType) => {
     // sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   };
-  const refreshToken = randomBytes(64).toString("hex");
+  // const refreshToken = randomBytes(64).toString("hex");
+  const refreshToken = getJwtToken(user.id);
 
   try {
     // Store refresh token in the database
@@ -55,11 +56,10 @@ const cookieToken = async (user, req, res, userType) => {
     //   },
     // });
 
-    // Store user details in session
     req.session.user = {
       user: user,
       userType: userType,
-      refreshToken, // You can include refresh token here if needed
+      refreshToken,
     };
 
     if (req.session) {
@@ -68,10 +68,11 @@ const cookieToken = async (user, req, res, userType) => {
         user: req.session.user,
         message: "User logged in and session started",
       });
-    } else {
-      console.error("Session is not available");
-      res.status(500).json({ message: "Session initialization error" });
     }
+    // else {
+    //   console.error("Session is not available");
+    //   res.status(500).json({ message: "Session initialization error" });
+    // }
   } catch (error) {
     console.error("Error storing session or refresh token:", error);
     res.status(500).json({ message: "Server error", error });
