@@ -7,8 +7,7 @@ const tourPlan = require("./routes/tourPlanRoutes");
 const tourGuideRoutes = require("./routes/tourGuideRoutes");
 const { PrismaClient } = require("@prisma/client");
 const notificationRoutes = require("./routes/notificationRoutes");
-const Redis = require("ioredis");
-const redis = require("redis");
+const redis = require("ioredis");
 const RedisStore = require("connect-redis").default;
 const session = require("express-session");
 
@@ -20,13 +19,22 @@ const cookieToken = require("./utils/cookieToken");
 dotenv.config();
 
 const app = express();
+// const redisClient = new redis({
+//   host: process.env.REDIS_HOST,
+//   port: process.env.REDIS_PORT,
+//   password: process.env.REDIS_PASSWORD,
+//   maxRetriesPerRequest: 2, // Limit retries
+//   reconnectOnError: (err) => true, // Auto reconnect
+//   tls: {
+//     // Try explicitly setting the minimum TLS version
+//     minVersion: "TLSv1.2",
+//   }, // Secure connection if needed
+// });
 
-const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL,
-  legacyMode: true,
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
+  legacyMode: true, // Enable this for compatibility with connect-redis
 });
-
-redisClient.on("error", (err) => console.log("Redis Client Error", err));
 
 app.use(
   cors({
