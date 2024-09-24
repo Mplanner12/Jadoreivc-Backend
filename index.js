@@ -19,22 +19,22 @@ const cookieToken = require("./utils/cookieToken");
 dotenv.config();
 
 const app = express();
-// const redisClient = new redis({
-//   host: process.env.REDIS_HOST,
-//   port: process.env.REDIS_PORT,
-//   password: process.env.REDIS_PASSWORD,
-//   maxRetriesPerRequest: 2, // Limit retries
-//   reconnectOnError: (err) => true, // Auto reconnect
-//   tls: {
-//     // Try explicitly setting the minimum TLS version
-//     minVersion: "TLSv1.2",
-//   }, // Secure connection if needed
-// });
-
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
-  legacyMode: true, // Enable this for compatibility with connect-redis
+const redisClient = new redis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
+  maxRetriesPerRequest: 2, // Limit retries
+  reconnectOnError: (err) => true, // Auto reconnect
+  // tls: {
+  //   // Try explicitly setting the minimum TLS version
+  //   minVersion: "TLSv1.2",
+  // }, // Secure connection if needed
 });
+
+// const redisClient = redis.createClient({
+//   url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
+//   legacyMode: true, // Enable this for compatibility with connect-redis
+// });
 
 app.use(
   cors({
