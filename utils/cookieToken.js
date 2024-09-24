@@ -47,13 +47,13 @@ const cookieToken = async (user, req, res, userType) => {
 
   try {
     // Store refresh token in the database
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      },
-    });
+    // await prisma.refreshToken.create({
+    //   data: {
+    //     userId: user.id,
+    //     token: refreshToken,
+    //     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    //   },
+    // });
 
     // Store user details in session
     req.session.user = {
