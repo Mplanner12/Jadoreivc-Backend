@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const protect = async (req, res, next) => {
-  const token = req.session.user;
+  const token = req.session.user.refreshToken;
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });

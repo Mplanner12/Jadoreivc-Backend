@@ -47,15 +47,6 @@ const cookieToken = async (user, req, res, userType) => {
   const refreshToken = getJwtToken(user.id);
 
   try {
-    // Store refresh token in the database
-    // await prisma.refreshToken.create({
-    //   data: {
-    //     userId: user.id,
-    //     token: refreshToken,
-    //     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    //   },
-    // });
-
     req.session.user = {
       user: user,
       userType: userType,
