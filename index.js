@@ -11,7 +11,9 @@ const redis = require("ioredis");
 const RedisStore = require("connect-redis").default;
 const session = require("express-session");
 const { createClient } = require("redis");
+const MemcachedStore = require("connect-memcached")(session);
 
+const store = new session.MemoryStore();
 const prisma = new PrismaClient();
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const cors = require("cors");
@@ -20,6 +22,12 @@ const cookieToken = require("./utils/cookieToken");
 dotenv.config();
 
 const app = express();
+
+const memcachedStore = new MemcachedStore({
+  hosts: ["https://jadoreivc-backend.vercel.app:11211"],
+  secret: process.env.SESSION_SECRET, // Use the same secret as your previous session configuration
+});
+
 // const redisClient = new redis({
 //   host: process.env.REDIS_HOST,
 //   port: process.env.REDIS_PORT,
@@ -63,7 +71,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    store: new RedisStore({ client: client }),
+    store: memcachedStore,
+    // store: store,
+    // store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
