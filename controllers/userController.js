@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const cookieToken = require("../utils/cookieToken");
+const getJwtToken = require("../helpers/getJwtToken");
 
 const prisma = new PrismaClient();
 
@@ -114,16 +115,14 @@ exports.loginUser = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-
     if (
       userType === "TOUR_GUIDE" &&
       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
     ) {
       return res.status(401).json({ message: "Not a tour guide" });
     }
-    // req.session.user = user;
-    // // Store user details in session
-    cookieToken(user, req, res, userType);
+    const token = getJwtToken(user.id);
+    req.session.user = token;
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
