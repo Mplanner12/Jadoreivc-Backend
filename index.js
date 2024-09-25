@@ -71,8 +71,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    store: memcachedStore,
-    // store: store,
+    // store: memcachedStore,
+    store: store,
     // store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
     resave: false,
