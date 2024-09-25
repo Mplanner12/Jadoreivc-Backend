@@ -63,7 +63,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    store: new RedisStore({ client: client }),
+    // store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,

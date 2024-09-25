@@ -121,8 +121,8 @@ exports.loginUser = async (req, res) => {
     ) {
       return res.status(401).json({ message: "Not a tour guide" });
     }
-
-    // Store user details in session
+    // req.session.user = user;
+    // // Store user details in session
     cookieToken(user, req, res, userType);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

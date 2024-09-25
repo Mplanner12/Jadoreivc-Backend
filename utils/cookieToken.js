@@ -7,21 +7,17 @@ const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 const prisma = new PrismaClient();
 
 const cookieToken = async (user, req, res, userType) => {
-  const options = {
-    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
-    maxAge: 3 * 24 * 60 * 60 * 1000,
-  };
+  // const options = {
+  //   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "None",
+  //   maxAge: 3 * 24 * 60 * 60 * 1000,
+  // };
   const refreshToken = getJwtToken(user.id);
 
   try {
-    req.session.user = {
-      user: user,
-      userType: userType,
-      refreshToken,
-    };
+    req.session.user = refreshToken;
 
     if (req.session) {
       res.status(200).json({
