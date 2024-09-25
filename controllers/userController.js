@@ -139,15 +139,13 @@ exports.getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     res.json({ success: true, user });
   } catch (error) {
     if (!res.headersSent) {
-    res.status(statusCode).json({ message: errorMessage });
-  } else {
-    res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
   }
-}}
+};
 
 // exports.logoutUser = async (req, res) => {
 //   try {
