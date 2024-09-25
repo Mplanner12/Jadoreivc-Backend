@@ -82,7 +82,7 @@ app.use("/api/plans", tourPlan);
 app.use("/api/tourGuides", tourGuideRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-app.use(errorHandler);
+// app.use(errorHandler);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the server");
