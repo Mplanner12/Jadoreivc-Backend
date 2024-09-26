@@ -43,8 +43,7 @@ app.use(
       "http://localhost:3000",
       // "https://jadoreivc-backend.vercel.app",
       "https://jadoreivc-frontend.vercel.app",
-      // "*/*",
-    ], // Add your Vercel app's origin
+    ],
     methods: "GET, POST, PUT, DELETE",
     allowedHeaders: "Content-Type, Authorization",
     credentials: true,
@@ -55,7 +54,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    // store: memcachedStore,
     // store: store,
     store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
