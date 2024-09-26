@@ -1,98 +1,7 @@
-// const { PrismaClient } = require("@prisma/client");
-// const bcrypt = require("bcryptjs");
-// const cookieToken = require("../utils/cookieToken");
-// const getJwtToken = require("../helpers/getJwtToken");
-
-// const prisma = new PrismaClient();
-
-// exports.registerUser = async (req, res) => {
-//   try {
-//     const { fullName, email, password, userType } = req.body;
-
-//     const existingUser = await prisma.user.findUnique({ where: { email } });
-
-//     if (existingUser) {
-//       return res.status(400).json({ message: "User already exists" });
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const user = await prisma.user.create({
-//       data: { fullName, email, password: hashedPassword, userType },
-//     });
-
-//     // Store user details in session
-//     cookieToken(user, req, res, userType);
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// exports.loginUser = async (req, res) => {
-//   try {
-//     const { email, password, userType } = req.body;
-
-//     const user = await prisma.user.findUnique({ where: { email } });
-
-//     if (!user || !(await bcrypt.compare(password, user.password))) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
-//     if (
-//       userType === "TOUR_GUIDE" &&
-//       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
-//     ) {
-//       return res.status(401).json({
-//         message:
-//           "You haven't yet updated your profile to login as a tour guide",
-//       });
-//     }
-//     const token = getJwtToken(user.id);
-//     cookieToken(res, user);
-//     // req.session.user = token;
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// exports.getCurrentUser = async (req, res) => {
-//   try {
-//     const user = await prisma.user.findUnique({
-//       where: { id: req.user.id },
-//       include: { tourGuide: true, reviews: true, tourPlans: true },
-//     });
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-//     res.json({ success: true, user });
-//   } catch (error) {
-//     if (!res.headersSent) {
-//       res.status(500).json({ message: "Server error", error: error.message });
-//     }
-//   }
-// };
-
-// exports.logoutUser = async (req, res) => {
-//   try {
-//     req.session.destroy((err) => {
-//       if (err) {
-//         return res.status(500).json({ message: "Failed to log out" });
-//       }
-
-//       res.clearCookie("connect.sid"); // clear the session cookie
-//       res.status(200).json({ message: "Successfully logged out" });
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
-// No longer needed since we are using sessions
-// const cookieToken = require("../utils/cookieToken");
-const getJwtToken = require("../helpers/getJwtToken");
 const cookieToken = require("../utils/cookieToken");
+const getJwtToken = require("../helpers/getJwtToken");
 
 const prisma = new PrismaClient();
 
@@ -112,11 +21,8 @@ exports.registerUser = async (req, res) => {
       data: { fullName, email, password: hashedPassword, userType },
     });
 
-    // Generate JWT token
-    const token = getJwtToken(user.id);
-
-    // Store token in the session
-    req.user = token;
+    // Store token in the cookie
+    cookieToken(res, user);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -133,7 +39,6 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-  console.log(req.session, "login");
   try {
     const { email, password, userType } = req.body;
 
@@ -153,12 +58,8 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // Generate JWT token
-    const token = getJwtToken(user.id);
-
-    req.user = token;
-
-    console.log("Token stored in session:", req.user);
+    // Store token in the cookie
+    cookieToken(res, user);
 
     res.status(200).json({
       message: "Login successful",
