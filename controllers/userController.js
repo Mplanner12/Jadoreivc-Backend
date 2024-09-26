@@ -116,7 +116,7 @@ exports.registerUser = async (req, res) => {
     const token = getJwtToken(user.id);
 
     // Store token in the session
-    req.session.user = token;
+    req.user = token;
 
     res.status(201).json({
       message: "User registered successfully",
