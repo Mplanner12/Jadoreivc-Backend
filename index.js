@@ -58,7 +58,7 @@ app.use(cookieParser());
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
+        // httpOnly,
         maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
         sameSite: "None",
       },
