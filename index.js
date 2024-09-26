@@ -27,8 +27,6 @@ const app = express();
 //   legacyMode: true, // Enable this for compatibility with connect-redis
 // });
 
-client.connect();
-
 const client = createClient({
   password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
   socket: {
@@ -36,6 +34,8 @@ const client = createClient({
     port: 18121,
   },
 });
+
+client.connect();
 
 app.use(
   cors({
