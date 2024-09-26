@@ -11,7 +11,6 @@ const redis = require("ioredis");
 const RedisStore = require("connect-redis").default;
 const session = require("express-session");
 const { createClient } = require("redis");
-const MemcachedStore = require("connect-memcached")(session);
 
 const store = new session.MemoryStore();
 const prisma = new PrismaClient();
@@ -23,15 +22,12 @@ dotenv.config();
 
 const app = express();
 
-const memcachedStore = new MemcachedStore({
-  hosts: ["https://jadoreivc-backend.vercel.app:11211"],
-  secret: process.env.SESSION_SECRET, // Use the same secret as your previous session configuration
-});
-
 // const redisClient = redis.createClient({
 //   url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
 //   legacyMode: true, // Enable this for compatibility with connect-redis
 // });
+
+client.connect();
 
 const client = createClient({
   password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
@@ -60,8 +56,8 @@ app.use(cookieParser());
 app.use(
   session({
     // store: memcachedStore,
-    store: store,
-    // store: new RedisStore({ client: client }),
+    // store: store,
+    store: new RedisStore({ client: client }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,

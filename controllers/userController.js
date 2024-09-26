@@ -1,47 +1,28 @@
-const { PrismaClient } = require("@prisma/client");
-const bcrypt = require("bcryptjs");
-const cookieToken = require("../utils/cookieToken");
-const getJwtToken = require("../helpers/getJwtToken");
+// const { PrismaClient } = require("@prisma/client");
+// const bcrypt = require("bcryptjs");
+// const cookieToken = require("../utils/cookieToken");
+// const getJwtToken = require("../helpers/getJwtToken");
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // exports.registerUser = async (req, res) => {
 //   try {
 //     const { fullName, email, password, userType } = req.body;
 
-//     // Check if the user already exists
-//     const existingUser = await prisma.user.findUnique({
-//       where: { email },
-//     });
+//     const existingUser = await prisma.user.findUnique({ where: { email } });
 
 //     if (existingUser) {
 //       return res.status(400).json({ message: "User already exists" });
 //     }
 
-//     // Hash the password
 //     const hashedPassword = await bcrypt.hash(password, 10);
 
-//     // Create new user
 //     const user = await prisma.user.create({
-//       data: {
-//         fullName,
-//         // address,
-//         email,
-//         password: hashedPassword,
-//         userType,
-//       },
+//       data: { fullName, email, password: hashedPassword, userType },
 //     });
 
-//     // If userType is TOUR_GUIDE, create an empty TourGuide record
-//     if (userType === "TOUR_GUIDE") {
-//       await prisma.tourGuide.create({
-//         data: {
-//           userId: user.id,
-//         },
-//       });
-//     }
-
-//     cookieToken(user, res, userType);
+//     // Store user details in session
+//     cookieToken(user, req, res, userType);
 //   } catch (error) {
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
@@ -51,22 +32,11 @@ const prisma = new PrismaClient();
 //   try {
 //     const { email, password, userType } = req.body;
 
-//     // Check if the user exists
-//     const user = await prisma.user.findUnique({
-//       where: { email },
-//     });
+//     const user = await prisma.user.findUnique({ where: { email } });
 
-//     if (!user) {
+//     if (!user || !(await bcrypt.compare(password, user.password))) {
 //       return res.status(401).json({ message: "Invalid email or password" });
 //     }
-
-//     // Check if the password is correct
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
-
-//     // Check if the userType matches and if the user has updated their profile to be a tour guide
 //     if (
 //       userType === "TOUR_GUIDE" &&
 //       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
@@ -76,12 +46,53 @@ const prisma = new PrismaClient();
 //           "You haven't yet updated your profile to login as a tour guide",
 //       });
 //     }
-
-//     cookieToken(user, res);
+//     const token = getJwtToken(user.id);
+//     req.session.user = token;
 //   } catch (error) {
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
 // };
+
+// exports.getCurrentUser = async (req, res) => {
+//   try {
+//     const user = await prisma.user.findUnique({
+//       where: { id: req.user.id },
+//       include: { tourGuide: true, reviews: true, tourPlans: true },
+//     });
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     res.json({ success: true, user });
+//   } catch (error) {
+//     if (!res.headersSent) {
+//       res.status(500).json({ message: "Server error", error: error.message });
+//     }
+//   }
+// };
+
+// exports.logoutUser = async (req, res) => {
+//   try {
+//     req.session.destroy((err) => {
+//       if (err) {
+//         return res.status(500).json({ message: "Failed to log out" });
+//       }
+
+//       res.clearCookie("connect.sid"); // clear the session cookie
+//       res.status(200).json({ message: "Successfully logged out" });
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
+// No longer needed since we are using sessions
+// const cookieToken = require("../utils/cookieToken");
+const getJwtToken = require("../helpers/getJwtToken");
+
+const prisma = new PrismaClient();
 
 exports.registerUser = async (req, res) => {
   try {
@@ -99,8 +110,21 @@ exports.registerUser = async (req, res) => {
       data: { fullName, email, password: hashedPassword, userType },
     });
 
-    // Store user details in session
-    cookieToken(user, req, res, userType);
+    // Generate JWT token
+    const token = getJwtToken(user.id);
+
+    // Store token in the session
+    req.session.user = token;
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        userType: user.userType,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -115,14 +139,32 @@ exports.loginUser = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
+
     if (
       userType === "TOUR_GUIDE" &&
       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
     ) {
-      return res.status(401).json({ message: "Not a tour guide" });
+      return res.status(401).json({
+        message:
+          "You haven't yet updated your profile to login as a tour guide",
+      });
     }
+
+    // Generate JWT token
     const token = getJwtToken(user.id);
+
+    // Store token in the session
     req.session.user = token;
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        userType: user.userType,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -130,14 +172,18 @@ exports.loginUser = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
+    // Assuming you have middleware to extract the user ID from the token
+    const userId = req.user.id;
+
     const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: userId },
       include: { tourGuide: true, reviews: true, tourPlans: true },
     });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     res.json({ success: true, user });
   } catch (error) {
     if (!res.headersSent) {
@@ -146,25 +192,6 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// exports.logoutUser = async (req, res) => {
-//   try {
-//     // Clear the cookie by setting it with an expired date
-//     res.cookie("token", "", {
-//       expires: new Date(0),
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "None",
-//       path: "/",
-//     });
-
-//     res.clearCookie("token");
-
-//     res.status(200).json({ message: "Successfully logged out" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
 exports.logoutUser = async (req, res) => {
   try {
     req.session.destroy((err) => {
@@ -172,7 +199,7 @@ exports.logoutUser = async (req, res) => {
         return res.status(500).json({ message: "Failed to log out" });
       }
 
-      res.clearCookie("connect.sid"); // clear the session cookie
+      // No need to clear cookies manually, session middleware handles it
       res.status(200).json({ message: "Successfully logged out" });
     });
   } catch (error) {
