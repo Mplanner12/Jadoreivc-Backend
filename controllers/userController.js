@@ -28,30 +28,31 @@
 //   }
 // };
 
-// exports.loginUser = async (req, res) => {
-//   try {
-//     const { email, password, userType } = req.body;
+exports.loginUser = async (req, res) => {
+  try {
+    const { email, password, userType } = req.body;
 
-//     const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-//     if (!user || !(await bcrypt.compare(password, user.password))) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
-//     if (
-//       userType === "TOUR_GUIDE" &&
-//       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
-//     ) {
-//       return res.status(401).json({
-//         message:
-//           "You haven't yet updated your profile to login as a tour guide",
-//       });
-//     }
-//     const token = getJwtToken(user.id);
-//     req.session.user = token;
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+    if (
+      userType === "TOUR_GUIDE" &&
+      !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
+    ) {
+      return res.status(401).json({
+        message:
+          "You haven't yet updated your profile to login as a tour guide",
+      });
+    }
+    const token = getJwtToken(user.id);
+    cookieToken(res, user);
+    // req.session.user = token;
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // exports.getCurrentUser = async (req, res) => {
 //   try {
@@ -91,6 +92,7 @@ const bcrypt = require("bcryptjs");
 // No longer needed since we are using sessions
 // const cookieToken = require("../utils/cookieToken");
 const getJwtToken = require("../helpers/getJwtToken");
+const cookieToken = require("../utils/cookieToken");
 
 const prisma = new PrismaClient();
 
@@ -154,9 +156,9 @@ exports.loginUser = async (req, res) => {
     // Generate JWT token
     const token = getJwtToken(user.id);
 
-    req.session.user = token;
+    req.user = token;
 
-    console.log("Token stored in session:", req.session.user);
+    console.log("Token stored in session:", req.user);
 
     res.status(200).json({
       message: "Login successful",

@@ -6,8 +6,8 @@ const prisma = new PrismaClient();
 const protect = async (req, res, next) => {
   const session = req.session;
   const token = req.session.user;
-  console.log("session retrived:", session);
-  console.log("Token retrived:", token);
+
+  console.log("Token retrived:", req.session.user);
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
