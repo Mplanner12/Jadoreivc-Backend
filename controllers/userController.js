@@ -28,31 +28,31 @@
 //   }
 // };
 
-exports.loginUser = async (req, res) => {
-  try {
-    const { email, password, userType } = req.body;
+// exports.loginUser = async (req, res) => {
+//   try {
+//     const { email, password, userType } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+//     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-    if (
-      userType === "TOUR_GUIDE" &&
-      !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
-    ) {
-      return res.status(401).json({
-        message:
-          "You haven't yet updated your profile to login as a tour guide",
-      });
-    }
-    const token = getJwtToken(user.id);
-    cookieToken(res, user);
-    // req.session.user = token;
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+//     if (!user || !(await bcrypt.compare(password, user.password))) {
+//       return res.status(401).json({ message: "Invalid email or password" });
+//     }
+//     if (
+//       userType === "TOUR_GUIDE" &&
+//       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
+//     ) {
+//       return res.status(401).json({
+//         message:
+//           "You haven't yet updated your profile to login as a tour guide",
+//       });
+//     }
+//     const token = getJwtToken(user.id);
+//     cookieToken(res, user);
+//     // req.session.user = token;
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 
 // exports.getCurrentUser = async (req, res) => {
 //   try {
@@ -132,47 +132,47 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// exports.loginUser = async (req, res) => {
-//   console.log(req.session, "login");
-//   try {
-//     const { email, password, userType } = req.body;
+exports.loginUser = async (req, res) => {
+  console.log(req.session, "login");
+  try {
+    const { email, password, userType } = req.body;
 
-//     const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-//     if (!user || !(await bcrypt.compare(password, user.password))) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
 
-//     if (
-//       userType === "TOUR_GUIDE" &&
-//       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
-//     ) {
-//       return res.status(401).json({
-//         message:
-//           "You haven't yet updated your profile to login as a tour guide",
-//       });
-//     }
+    if (
+      userType === "TOUR_GUIDE" &&
+      !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
+    ) {
+      return res.status(401).json({
+        message:
+          "You haven't yet updated your profile to login as a tour guide",
+      });
+    }
 
-//     // Generate JWT token
-//     const token = getJwtToken(user.id);
+    // Generate JWT token
+    const token = getJwtToken(user.id);
 
-//     req.user = token;
+    req.user = token;
 
-//     console.log("Token stored in session:", req.user);
+    console.log("Token stored in session:", req.user);
 
-//     res.status(200).json({
-//       message: "Login successful",
-//       user: {
-//         id: user.id,
-//         fullName: user.fullName,
-//         email: user.email,
-//         userType: user.userType,
-//       },
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        userType: user.userType,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 exports.getCurrentUser = async (req, res) => {
   try {

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const protect = async (req, res, next) => {
   const session = req.session;
-  const token = req.session.user;
+  const token = req.user;
 
   console.log("Token retrived:", req.session.user);
 
