@@ -7,7 +7,7 @@ const protect = async (req, res, next) => {
   const session = req.session;
   const token = req.user;
 
-  console.log("Token retrived:", req.user);
+  console.log("Token retrived:", token);
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
