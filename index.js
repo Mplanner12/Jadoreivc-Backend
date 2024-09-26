@@ -22,21 +22,6 @@ dotenv.config();
 
 const app = express();
 
-// const redisClient = redis.createClient({
-//   url: process.env.REDIS_URL, // Your Redis Labs/ElastiCache URL
-//   legacyMode: true, // Enable this for compatibility with connect-redis
-// });
-
-const client = createClient({
-  password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
-  socket: {
-    host: "redis-18121.c270.us-east-1-3.ec2.redns.redis-cloud.com",
-    port: 18121,
-  },
-});
-
-client.connect();
-
 app.use(
   cors({
     origin: [
@@ -52,36 +37,48 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  session({
-    // store: store,
-    store: new RedisStore({ client: client }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-      sameSite: "None",
+
+(async () => {
+  const client = createClient({
+    password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
+    socket: {
+      host: "redis-18121.c270.us-east-1-3.ec2.redns.redis-cloud.com",
+      port: 18121,
     },
-  })
-);
+  });
 
-app.use("/api/users", userRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/plans", tourPlan);
-app.use("/api/tourGuides", tourGuideRoutes);
-app.use("/api/notifications", notificationRoutes);
+  await client.connect();
 
-// app.use(errorHandler);
+  app.use(
+    session({
+      // store: store,
+      store: new RedisStore({ client: client }),
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+        sameSite: "None",
+      },
+    })
+  );
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the server");
-});
+  app.use("/api/users", userRoutes);
+  app.use("/api/reviews", reviewRoutes);
+  app.use("/api/plans", tourPlan);
+  app.use("/api/tourGuides", tourGuideRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+  app.get("/", (req, res) => {
+    res.send("Welcome to the server");
+  });
+
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => console.log(`Server running on port ${port}`));
+})();
+
 app.use(
   express.urlencoded({
     extended: true,
@@ -262,3 +259,9 @@ app.get("/", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
+// password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
+//       socket: {
+//         host: "redis-18121.c270.us-east-1-3.ec2.redns.redis-cloud.com",
+//         port: 18121,
+//       },

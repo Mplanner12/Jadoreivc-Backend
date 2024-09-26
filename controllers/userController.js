@@ -131,6 +131,7 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
+  console.log(req.session, "login");
   try {
     const { email, password, userType } = req.body;
 
@@ -153,8 +154,9 @@ exports.loginUser = async (req, res) => {
     // Generate JWT token
     const token = getJwtToken(user.id);
 
-    // Store token in the session
     req.session.user = token;
+
+    console.log("Token stored in session:", req.session.user);
 
     res.status(200).json({
       message: "Login successful",
