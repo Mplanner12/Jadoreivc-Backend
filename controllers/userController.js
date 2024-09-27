@@ -100,14 +100,8 @@ exports.getCurrentUser = async (req, res) => {
 
 exports.logoutUser = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Failed to log out" });
-      }
-
-      // No need to clear cookies manually, session middleware handles it
-      res.status(200).json({ message: "Successfully logged out" });
-    });
+    res.clearCookie("token");
+    res.status(200).json({ message: "Successfully logged out" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -141,59 +135,44 @@ exports.updateProfile = async (req, res) => {
       const { fullName, address, languages, userType, tourGuideData } =
         req.body;
 
+      console.log("Received userType:", userType); // Check the value of userType
+
+      if (!userType) {
+        return res.status(400).json({ message: "userType is required" });
+      }
+
       const updateData = {};
 
       if (fullName) updateData.fullName = fullName;
       if (address) updateData.address = address;
       if (languages) updateData.languages = languages;
+      if (userType) updateData.userType = userType;
       if (req.file) {
         updateData.image = `../../client/public/uploads/userImages/${req.file.filename}`;
       }
 
-      // Update user profile
       const user = await prisma.user.update({
         where: { id: req.user.id },
         data: updateData,
       });
 
       if (userType === "TOUR_GUIDE" && tourGuideData) {
-        // Use upsert to ensure a single instance of TourGuide
         tourGuideData.offerRange = parseInt(tourGuideData.offerRange);
 
-        const tourGuideUpdateData = {};
+        const tourGuideUpdateData = {
+          location: tourGuideData.location,
+          offerRange: tourGuideData.offerRange,
+          aboutMe: tourGuideData.aboutMe,
+          motto: tourGuideData.motto,
+          thingsToDo: tourGuideData.thingsToDo,
+        };
 
-        // Add fields to tourGuideUpdateData only if they are provided
-        if (tourGuideData.location)
-          tourGuideUpdateData.location = tourGuideData.location;
-        if (tourGuideData.offerRange)
-          tourGuideUpdateData.offerRange = parseInt(tourGuideData.offerRange);
-        if (tourGuideData.aboutMe)
-          tourGuideUpdateData.aboutMe = tourGuideData.aboutMe;
-        if (tourGuideData.motto)
-          tourGuideUpdateData.motto = tourGuideData.motto;
-        if (tourGuideData.thingsToDo)
-          tourGuideUpdateData.thingsToDo = tourGuideData.thingsToDo;
-        if (tourGuideData.image)
-          tourGuideUpdateData.image = tourGuideData.image;
-
-        // Use upsert to ensure a single instance of TourGuide
         await prisma.tourGuide.upsert({
           where: { userId: user.id },
-          update: tourGuideUpdateData, // Use the tourGuideUpdateData object
+          update: tourGuideUpdateData,
           create: {
             userId: user.id,
-            // Only include fields if they are provided in tourGuideData
-            ...(tourGuideData.location && {
-              location: tourGuideData.location,
-            }),
-            ...(tourGuideData.offerRange && {
-              offerRange: parseInt(tourGuideData.offerRange),
-            }),
-            ...(tourGuideData.aboutMe && { aboutMe: tourGuideData.aboutMe }),
-            ...(tourGuideData.motto && { motto: tourGuideData.motto }),
-            ...(tourGuideData.thingsToDo && {
-              thingsToDo: tourGuideData.thingsToDo,
-            }),
+            ...tourGuideUpdateData,
           },
         });
       }
