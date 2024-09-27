@@ -16,7 +16,6 @@ const cookieToken = (res, user) => {
     sameSite: "None",
   };
 
-  // Set the JWT token as a cookie in the response
   res.cookie("token", token, options);
 };
 
