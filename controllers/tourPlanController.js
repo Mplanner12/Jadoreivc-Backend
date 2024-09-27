@@ -88,7 +88,9 @@ exports.getTourPlanById = async (req, res) => {
 async function sendEmail(to, subject, text) {
   // Create a transporter object
   let transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: "musanplanner127@gmail.com",
       pass: process.env.MAILP,
@@ -103,6 +105,18 @@ async function sendEmail(to, subject, text) {
     text,
   };
 
+  // transporter
+  //   .sendMail({
+  //     to: "almussanplanner12@gmail.com",
+  //     subject: "Mail",
+  //     html: "<h1>Hi there Man</h1>",
+  //   })
+  //   .then(() => {
+  //     console.log("Sent");
+  //   })
+  //   .catch((err) => {
+  //     console.error(err);
+  //   });
   try {
     let info = await transporter.sendMail(mailOptions);
     console.log("Email sent: " + info.response);
@@ -112,3 +126,5 @@ async function sendEmail(to, subject, text) {
 }
 
 exports.sendEmail = sendEmail;
+
+// sendEmail();
