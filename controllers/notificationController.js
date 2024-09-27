@@ -21,10 +21,10 @@ const createNotification = async (req, res) => {
 
 const getNotifications = async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming you have user authentication middleware
+    const userId = req.user.id;
 
     const notifications = await prisma.notification.findMany({
-      where: { userId, isRead: false }, // Fetch unread notifications for the user
+      where: { userId: userId, isRead: false }, // Fetch unread notifications for the user
       orderBy: { createdAt: "desc" }, // Show newest notifications first
       include: {
         tourPlan: {

@@ -1,7 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const cookieToken = require("../utils/cookieToken");
-const getJwtToken = require("../helpers/getJwtToken");
+const multer = require("multer");
+const path = require("path");
 
 const prisma = new PrismaClient();
 
@@ -112,88 +113,114 @@ exports.logoutUser = async (req, res) => {
   }
 };
 
+// update image logic
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/userImages/"); // Specify the directory to store images
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({ storage: storage });
+
 exports.updateProfile = async (req, res) => {
-  try {
-    const { fullName, address, languages, image, userType, tourGuideData } =
-      req.body;
-
-    const updateData = {};
-
-    if (fullName) updateData.fullName = fullName;
-    if (address) updateData.address = address;
-    if (languages) updateData.languages = languages;
-    if (image) updateData.image = image;
-
-    // Update user profile
-    const user = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        fullName,
-        address,
-        languages,
-        image,
-      },
-    });
-
-    if (userType === "TOUR_GUIDE" && tourGuideData) {
-      // Use upsert to ensure a single instance of TourGuide
-      tourGuideData.offerRange = parseInt(tourGuideData.offerRange);
-
-      const tourGuideUpdateData = {};
-
-      // Add fields to tourGuideUpdateData only if they are provided
-      if (tourGuideData.location)
-        tourGuideUpdateData.location = tourGuideData.location;
-      if (tourGuideData.offerRange)
-        tourGuideUpdateData.offerRange = parseInt(tourGuideData.offerRange);
-      if (tourGuideData.aboutMe)
-        tourGuideUpdateData.aboutMe = tourGuideData.aboutMe;
-      if (tourGuideData.motto) tourGuideUpdateData.motto = tourGuideData.motto;
-      if (tourGuideData.thingsToDo)
-        tourGuideUpdateData.thingsToDo = tourGuideData.thingsToDo;
-
-      // Use upsert to ensure a single instance of TourGuide
-      await prisma.tourGuide.upsert({
-        where: { userId: user.id },
-        update: tourGuideUpdateData, // Use the tourGuideUpdateData object
-        create: {
-          userId: user.id,
-          // Only include fields if they are provided in tourGuideData
-          ...(tourGuideData.location && { location: tourGuideData.location }),
-          ...(tourGuideData.offerRange && {
-            offerRange: parseInt(tourGuideData.offerRange),
-          }),
-          ...(tourGuideData.aboutMe && { aboutMe: tourGuideData.aboutMe }),
-          ...(tourGuideData.motto && { motto: tourGuideData.motto }),
-          ...(tourGuideData.thingsToDo && {
-            thingsToDo: tourGuideData.thingsToDo,
-          }),
-        },
-      });
+  upload.single("image")(req, res, async (err) => {
+    if (err) {
+      return res
+        .status(400)
+        .json({ message: "Image upload failed", error: err.message });
     }
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-
-  exports.deleteUser = async (req, res) => {
     try {
-      const userId = req.user.id; // Assuming you have user authentication in place
+      const { fullName, address, languages, userType, tourGuideData } =
+        req.body;
 
-      // Delete the associated TourGuide record if it exists
-      await prisma.tourGuide.deleteMany({
-        where: { userId },
+      const updateData = {};
+
+      if (fullName) updateData.fullName = fullName;
+      if (address) updateData.address = address;
+      if (languages) updateData.languages = languages;
+      if (req.file) {
+        updateData.image = `../../client/public/uploads/userImages/${req.file.filename}`;
+      }
+
+      // Update user profile
+      const user = await prisma.user.update({
+        where: { id: req.user.id },
+        data: updateData,
       });
 
-      // Delete the user
-      await prisma.user.delete({
-        where: { id: userId },
-      });
+      if (userType === "TOUR_GUIDE" && tourGuideData) {
+        // Use upsert to ensure a single instance of TourGuide
+        tourGuideData.offerRange = parseInt(tourGuideData.offerRange);
 
-      res.status(200).json({ message: "User deleted successfully" });
+        const tourGuideUpdateData = {};
+
+        // Add fields to tourGuideUpdateData only if they are provided
+        if (tourGuideData.location)
+          tourGuideUpdateData.location = tourGuideData.location;
+        if (tourGuideData.offerRange)
+          tourGuideUpdateData.offerRange = parseInt(tourGuideData.offerRange);
+        if (tourGuideData.aboutMe)
+          tourGuideUpdateData.aboutMe = tourGuideData.aboutMe;
+        if (tourGuideData.motto)
+          tourGuideUpdateData.motto = tourGuideData.motto;
+        if (tourGuideData.thingsToDo)
+          tourGuideUpdateData.thingsToDo = tourGuideData.thingsToDo;
+        if (tourGuideData.image)
+          tourGuideUpdateData.image = tourGuideData.image;
+
+        // Use upsert to ensure a single instance of TourGuide
+        await prisma.tourGuide.upsert({
+          where: { userId: user.id },
+          update: tourGuideUpdateData, // Use the tourGuideUpdateData object
+          create: {
+            userId: user.id,
+            // Only include fields if they are provided in tourGuideData
+            ...(tourGuideData.location && {
+              location: tourGuideData.location,
+            }),
+            ...(tourGuideData.offerRange && {
+              offerRange: parseInt(tourGuideData.offerRange),
+            }),
+            ...(tourGuideData.aboutMe && { aboutMe: tourGuideData.aboutMe }),
+            ...(tourGuideData.motto && { motto: tourGuideData.motto }),
+            ...(tourGuideData.thingsToDo && {
+              thingsToDo: tourGuideData.thingsToDo,
+            }),
+          },
+        });
+      }
+
+      res.json(user);
     } catch (error) {
       res.status(500).json({ message: "Server error", error: error.message });
     }
-  };
+  });
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming you have user authentication in place
+
+    // Delete the associated TourGuide record if it exists
+    await prisma.tourGuide.deleteMany({
+      where: { userId },
+    });
+
+    // Delete the user
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };

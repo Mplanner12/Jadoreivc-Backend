@@ -39,32 +39,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 (async () => {
-  const client = createClient({
-    password: "Owxv05L6O6EJTCCITng9XIK13lpX8JfZ",
-    socket: {
-      host: "redis-18121.c270.us-east-1-3.ec2.redns.redis-cloud.com",
-      port: 18121,
-    },
-  });
-
-  await client.connect();
-
-  app.use(
-    session({
-      // store: store,
-      store: new RedisStore({ client: client }),
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        // httpOnly,
-        maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-        sameSite: "None",
-      },
-    })
-  );
-
   app.use("/api/users", userRoutes);
   app.use("/api/reviews", reviewRoutes);
   app.use("/api/plans", tourPlan);

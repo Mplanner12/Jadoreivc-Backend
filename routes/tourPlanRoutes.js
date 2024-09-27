@@ -3,8 +3,9 @@ const {
   createTourPlan,
   getTourPlans,
   getTourPlanById,
+  sendEmail,
 } = require("../controllers/tourPlanController");
-// const { isAuthenticated } = require("../middlewares/auth/isAuthenticated");
+// const sendEmail = require("../controllers/tourPlanController");
 const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
@@ -12,5 +13,6 @@ const router = express.Router();
 router.post("/tourPlans", protect, createTourPlan);
 router.get("/tourPlans", getTourPlans);
 router.get("/tourPlanById/:id", protect, getTourPlanById);
+router.post("/sendEM", protect, sendEmail);
 
 module.exports = router;

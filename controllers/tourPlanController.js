@@ -1,4 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -81,3 +84,31 @@ exports.getTourPlanById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+async function sendEmail(to, subject, text) {
+  // Create a transporter object
+  let transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "musanplanner127@gmail.com",
+      pass: process.env.MAILP,
+    },
+  });
+
+  // Set up email options
+  let mailOptions = {
+    from: "musanplanner127@gmail.com",
+    to,
+    subject,
+    text,
+  };
+
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+  } catch (error) {
+    console.error("Error sending email: ", error);
+  }
+}
+
+exports.sendEmail = sendEmail;

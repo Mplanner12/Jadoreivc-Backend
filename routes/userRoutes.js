@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/auth/register", registerUser);
 router.post("/auth/login", loginUser);
 router.get("/auth/logout", logoutUser);
-router.put("/auth/profile", protect, updateProfile);
+router.put("/profile", protect, updateProfile);
 router.delete("/delete", protect, (req, res) => {
   deleteUser(req, res); // Call the deleteUser function
 });
