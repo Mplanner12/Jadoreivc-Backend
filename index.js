@@ -60,7 +60,7 @@ app.use(
 );
 
 // Paypal Integration
-const environment = process.env.ENVIRONMENT || "sandbox";
+const environment = process.env.ENVIRONMENT || "Production";
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 const base = "https://api-m.sandbox.paypal.com";
 
