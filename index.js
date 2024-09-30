@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      // "https://jadoreivc-backend.vercel.app",
+      "https://jadoreivc.com",
       "https://jadoreivc-frontend.vercel.app",
     ],
     methods: "GET, POST, PUT, DELETE",
