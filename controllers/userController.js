@@ -22,6 +22,15 @@ exports.registerUser = async (req, res) => {
       data: { fullName, email, password: hashedPassword, userType },
     });
 
+    // Create TourGuide record if userType is "TOUR_GUIDE"
+    if (userType === "TOUR_GUIDE") {
+      await prisma.tourGuide.create({
+        data: {
+          userId: user.id,
+        },
+      });
+    }
+
     // Store token in the cookie
     cookieToken(res, user);
 
@@ -49,6 +58,13 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (user.userType === "TOUR_GUIDE" && userType === "TOURIST") {
+      return res.status(403).json({
+        message:
+          "You are registered as a Tour Guide. Please login as a Tour Guide.",
+      });
+    }
+
     if (
       userType === "TOUR_GUIDE" &&
       !(await prisma.tourGuide.findUnique({ where: { userId: user.id } }))
@@ -59,7 +75,6 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // Store token in the cookie
     cookieToken(res, user);
 
     res.status(200).json({
@@ -110,7 +125,7 @@ exports.logoutUser = async (req, res) => {
 // update image logic
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/userImages/"); // Specify the directory to store images
+    cb(null, "uploads/userImages/"); // Specifying the directory to store images
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
