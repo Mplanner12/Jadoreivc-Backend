@@ -9,6 +9,6 @@ const protect = require("../middlewares/authMiddleware"); // Your authentication
 
 router.post("/", protect, createNotification);
 router.get("/", protect, (req, res) => getNotifications(req, res));
-router.put("/:id/read", protect, markNotificationAsRead);
+router.put("/:id/mark-read", protect, markNotificationAsRead);
 
 module.exports = router;
