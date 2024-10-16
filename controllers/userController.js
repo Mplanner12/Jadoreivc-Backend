@@ -3,8 +3,43 @@ const bcrypt = require("bcryptjs");
 const cookieToken = require("../utils/cookieToken");
 const multer = require("multer");
 const path = require("path");
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const prisma = new PrismaClient();
+
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Function to send verification email
+async function sendVerificationEmail(email, verificationCode) {
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "musanplanner127@gmail.com",
+      pass: process.env.MAILP,
+    },
+  });
+
+  // Set up email options
+  let mailOptions = {
+    from: "musanplanner127@gmail.com",
+    to: email,
+    subject: "Email Verification",
+    text: `Your verification code is: ${verificationCode}`,
+  };
+
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+  } catch (error) {
+    console.error("Error sending email: ", error);
+  }
+}
 
 exports.registerUser = async (req, res) => {
   try {
@@ -18,9 +53,19 @@ exports.registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const verificationCode = generateVerificationCode();
+
     const user = await prisma.user.create({
-      data: { fullName, email, password: hashedPassword, userType },
+      data: {
+        fullName,
+        email,
+        password: hashedPassword,
+        userType,
+        verificationCode,
+        isVerified: false,
+      },
     });
+    // localStorage.setItem("email", email);
 
     // Create TourGuide record if userType is "TOUR_GUIDE"
     if (userType === "TOUR_GUIDE") {
@@ -31,8 +76,10 @@ exports.registerUser = async (req, res) => {
       });
     }
 
+    await sendVerificationEmail(email, verificationCode);
+
     // Store token in the cookie
-    cookieToken(res, user);
+    // cookieToken(res, user);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -48,6 +95,36 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+exports.verifyUser = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User already verified" });
+    }
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    // Update user to verified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isVerified: true, verificationCode: null },
+    });
+
+    res.status(200).json({ message: "User verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.loginUser = async (req, res) => {
   try {
     const { email, password, userType } = req.body;
@@ -56,6 +133,13 @@ exports.loginUser = async (req, res) => {
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(402).json({
+        message:
+          "User not verified. Please check your email for verification instructions.",
+      });
     }
 
     if (user.userType === "TOUR_GUIDE" && userType === "TOURIST") {

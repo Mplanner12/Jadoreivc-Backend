@@ -24,22 +24,23 @@ model Session {
 }
 
 model User {
-  id           String         @id @default(uuid()) @map("_id")
-  fullName     String
-  address      String?
-  email        String         @unique
-  password     String
-  userType     UserType
-  languages    String[]
-  image        String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  tourGuide    TourGuide?
-  reviews      Review[]       @relation("touristReviews")
-  tourPlans    TourPlan[]
-  // PlanTour  PlanTour[]
-  Notification Notification?
-  RefreshToken RefreshToken[]
+  id               String         @id @default(uuid()) @map("_id")
+  fullName         String
+  address          String?
+  email            String         @unique
+  password         String
+  userType         UserType
+  languages        String[]
+  image            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tourGuide        TourGuide?
+  reviews          Review[]       @relation("touristReviews")
+  tourPlans        TourPlan[]
+  Notification     Notification?
+  RefreshToken     RefreshToken[]
+  verificationCode String?
+  isVerified       Boolean        @default(false)
 }
 
 model RefreshToken {

@@ -88,7 +88,8 @@ exports.getTourPlanById = async (req, res) => {
 async function sendEmail(to, subject, text) {
   // Create a transporter object
   let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    // host: "smtp.gmail.com",
+    service: "gmail",
     port: 465,
     secure: true,
     auth: {
@@ -127,4 +128,4 @@ async function sendEmail(to, subject, text) {
 
 exports.sendEmail = sendEmail;
 
-// sendEmail();
+sendEmail();
