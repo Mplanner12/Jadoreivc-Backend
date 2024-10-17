@@ -5,7 +5,27 @@ const multer = require("multer");
 const path = require("path");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
+const { info } = require("console");
 dotenv.config();
+
+// const FormData = require("form-data");
+// const Mailgun = require("mailgun.js");
+// const mailgun = new Mailgun(FormData);
+// const client = mailgun.client({
+//   username: "api",
+//   key: process.env.Mailgun_API_KEY,
+// });
+
+// let mailOptions = {
+//   from: "mplanner127@gmail.com",
+//   to: "almussanplanner12@gmail.com",
+//   subject: "Email Verification",
+//   text: `Your Jadoreivc email verification code is here`,
+// };
+
+// client.messages
+//   .create(process.env.Mailgun_DOMAIN, mailOptions)
+//   .then((msg) => console.log(msg).catch((err) => console.log(err)));
 
 const prisma = new PrismaClient();
 
@@ -25,20 +45,43 @@ async function sendVerificationEmail(email, verificationCode) {
     },
   });
 
+  await new Promise((resolve, reject) => {
+    transporter.verify((error, success) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        console.log("Server is ready to take our messages");
+        resolve(success);
+      }
+    });
+  });
+
   // Set up email options
   let mailOptions = {
     from: "musanplanner127@gmail.com",
     to: email,
     subject: "Email Verification",
-    text: `Your verification code is: ${verificationCode}`,
+    text: `Your Jadoreivc email verification code is: ${verificationCode}`,
   };
 
-  try {
-    let info = await transporter.sendMail(mailOptions);
-    console.log("Email sent: " + info.response);
-  } catch (error) {
-    console.error("Error sending email: ", error);
-  }
+  await new Promise((resolve, reject) => {
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        console.log(info);
+        resolve(info);
+      }
+    });
+  });
+  // try {
+  //   let info = await transporter.sendMail(mailOptions);
+  //   console.log("Email sent: " + info.response);
+  // } catch (error) {
+  //   console.error("Error sending email: ", error);
+  // }
 }
 
 exports.registerUser = async (req, res) => {
@@ -77,9 +120,6 @@ exports.registerUser = async (req, res) => {
     }
 
     await sendVerificationEmail(email, verificationCode);
-
-    // Store token in the cookie
-    // cookieToken(res, user);
 
     res.status(201).json({
       message: "User registered successfully",
