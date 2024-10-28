@@ -8,25 +8,6 @@ const dotenv = require("dotenv");
 const { info } = require("console");
 dotenv.config();
 
-// const FormData = require("form-data");
-// const Mailgun = require("mailgun.js");
-// const mailgun = new Mailgun(FormData);
-// const client = mailgun.client({
-//   username: "api",
-//   key: process.env.Mailgun_API_KEY,
-// });
-
-// let mailOptions = {
-//   from: "mplanner127@gmail.com",
-//   to: "almussanplanner12@gmail.com",
-//   subject: "Email Verification",
-//   text: `Your Jadoreivc email verification code is here`,
-// };
-
-// client.messages
-//   .create(process.env.Mailgun_DOMAIN, mailOptions)
-//   .then((msg) => console.log(msg).catch((err) => console.log(err)));
-
 const prisma = new PrismaClient();
 
 function generateVerificationCode() {
